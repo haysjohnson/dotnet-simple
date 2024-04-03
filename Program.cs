@@ -7,6 +7,23 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
+// load API key from appsettings.json
+using System.IO;
+using System.Text.Json;
+var json = File.ReadAllText("appsettings.json");
+var jsonObj = JsonDocument.Parse(json);
+string APIKey = null;
+if (jsonObj.RootElement.TryGetProperty("APIKey", out JsonElement apiKeyElement))
+{
+    APIKey = apiKeyElement.GetString();
+    // Now you can use APIKey in your application
+}
+else
+{
+    Console.WriteLine("APIKey not found in appsettings.json");
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 const string serviceName = "roll-dice";
@@ -29,7 +46,7 @@ builder.Services.AddOpenTelemetry()
             //IF APM endpoint here
             opt.Endpoint = new Uri("https://otlp.immersivefusion.com");
             //API Key here
-            opt.Headers = $"API-Key={"your-key-here"}";
+            opt.Headers = $"API-Key={APIKey}";
             //opt.Protocol = OtlpExportProtocol
           }))
       .WithMetrics(metrics => metrics
