@@ -13,3 +13,6 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+
+# used for API key storage
+appsettings.json
