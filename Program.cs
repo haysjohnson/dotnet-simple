@@ -24,15 +24,12 @@ builder.Services.AddOpenTelemetry()
       .WithTracing(tracing => tracing
           .AddAspNetCoreInstrumentation()
           .AddConsoleExporter()
-          .AddOtlpExporter(opt =>{
-            opt.Endpoint = new Uri(
-                //enter endpoint below
-                "https://otlp.immersivefusion.com"
-            );
-            opt.Headers = $"API-Key={this.Configuration[
-                //enter API key below
-                "if-5e986d1a-1406-4510-8cd0-311dbf75131c"
-            ]}";
+          .AddOtlpExporter(opt =>
+          {
+            //IF APM endpoint here
+            opt.Endpoint = new Uri("https://otlp.immersivefusion.com");
+            //API Key here
+            opt.Headers = $"API-Key={"your-key-here"}";
             //opt.Protocol = OtlpExportProtocol
           }))
       .WithMetrics(metrics => metrics
