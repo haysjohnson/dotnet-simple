@@ -1,18 +1,25 @@
+using System.Diagnostics;
 using System.Globalization;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+
 using Microsoft.AspNetCore.Mvc;
+
 using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-// load API key from appsettings.json
+using NServiceBus.Pipeline;
+
 using System.IO;
 using System.Text.Json;
 var json = File.ReadAllText("appsettings.json");
 var jsonObj = JsonDocument.Parse(json);
-string APIKey = null;
+
+// load API key from appsettings.json
+string? APIKey = null;
 if (jsonObj.RootElement.TryGetProperty("APIKey", out JsonElement apiKeyElement))
 {
     APIKey = apiKeyElement.GetString();
@@ -80,3 +87,12 @@ int RollDice()
 app.MapGet("/rolldice/{player?}", HandleRollDice);
 
 app.Run();
+
+// internal activity test to enrich IF APM traces
+internal static class NServiceBusActivitySource
+{
+    private static readonly AssemblyName AssemblyName 
+        = typeof(NServiceBusActivitySource).Assembly.GetName();
+    internal static readonly ActivitySource ActivitySource 
+        = new ActivitySource(AssemblyName.Name, AssemblyName.Version.ToString());
+}
