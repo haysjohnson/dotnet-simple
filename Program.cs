@@ -47,6 +47,7 @@ builder.Services.AddOpenTelemetry()
       .ConfigureResource(resource => resource.AddService(serviceName))
       .WithTracing(tracing => tracing
           .AddAspNetCoreInstrumentation()
+          .AddSource(NServiceBusActivitySource.ActivitySource.Name)
           .AddConsoleExporter()
           .AddOtlpExporter(opt =>
           {
@@ -65,6 +66,8 @@ var app = builder.Build();
 
 string HandleRollDice([FromServices]ILogger<Program> logger, string? player)
 {
+using (NServiceBusActivitySource.ActivitySource.CreateActivity("Test nested", ActivityKind.Server))
+{
     var result = RollDice();
 
     if (string.IsNullOrEmpty(player))
@@ -76,7 +79,9 @@ string HandleRollDice([FromServices]ILogger<Program> logger, string? player)
         logger.LogInformation("{player} is rolling the dice: {result}", player, result);
     }
 
+
     return result.ToString(CultureInfo.InvariantCulture);
+}
 }
 
 int RollDice()
