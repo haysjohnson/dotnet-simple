@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Microsoft.Extensions.DependencyInjection;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -41,6 +42,14 @@ builder.Logging.AddOpenTelemetry(options =>
         .SetResourceBuilder(
             ResourceBuilder.CreateDefault()
                 .AddService(serviceName))
+        .AddOtlpExporter(opt =>
+          {
+            //IF APM endpoint here
+            opt.Endpoint = new Uri("https://otlp.immersivefusion.com");
+            //API Key here
+            opt.Headers = $"API-Key={APIKey}";
+            //opt.Protocol = OtlpExportProtocol
+          })
         .AddConsoleExporter();
 });
 builder.Services.AddOpenTelemetry()
@@ -66,9 +75,22 @@ var app = builder.Build();
 
 string HandleRollDice([FromServices]ILogger<Program> logger, string? player)
 {
-using (NServiceBusActivitySource.ActivitySource.CreateActivity("Test nested", ActivityKind.Server))
+using (CustomActivitySource.ActivitySource.CreateActivity("Test nested", ActivityKind.Server))
 {
     var result = RollDice();
+
+    //levels of nested activity delay
+    using (CustomActivitySource.ActivitySource.StartActivity("Test further nested - really slow", ActivityKind.Server))
+    {
+        //something here
+        Task.Delay(TimeSpan.FromMilliseconds(1000)).GetAwaiter().GetResult();
+    }
+
+    using (CustomActivitySource.ActivitySource.StartActivity("Test further nested - kind of slow", ActivityKind.Server))
+    {
+        //something here
+        Task.Delay(TimeSpan.FromMilliseconds(500)).GetAwaiter().GetResult();
+    }
 
     if (string.IsNullOrEmpty(player))
     {
@@ -94,10 +116,10 @@ app.MapGet("/rolldice/{player?}", HandleRollDice);
 app.Run();
 
 // internal activity test to enrich IF APM traces
-internal static class NServiceBusActivitySource
+internal static class CustomActivitySource
 {
     private static readonly AssemblyName AssemblyName 
-        = typeof(NServiceBusActivitySource).Assembly.GetName();
+        = typeof(CustomActivitySource).Assembly.GetName();
     internal static readonly ActivitySource ActivitySource 
         = new ActivitySource(AssemblyName.Name, AssemblyName.Version.ToString());
 }
