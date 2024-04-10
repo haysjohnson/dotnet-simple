@@ -12,8 +12,6 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
-using NServiceBus.Pipeline;
-
 using System.IO;
 using System.Text.Json;
 var json = File.ReadAllText("appsettings.json");
@@ -56,7 +54,7 @@ builder.Services.AddOpenTelemetry()
       .ConfigureResource(resource => resource.AddService(serviceName))
       .WithTracing(tracing => tracing
           .AddAspNetCoreInstrumentation()
-          .AddSource(NServiceBusActivitySource.ActivitySource.Name)
+          .AddSource(CustomActivitySource.ActivitySource.Name)
           .AddConsoleExporter()
           .AddOtlpExporter(opt =>
           {
